@@ -1,0 +1,35 @@
+# context-compress configuration
+# Place in your project root as compress.yaml
+
+defaults:
+  strip_markdown: true
+  remove_blanks: true
+  collapse_lists: true
+  deduplicate: true
+  preserve_code_blocks: true
+  preserve_safety_rules: true
+  compression_level: medium  # light, medium, heavy
+
+# Per-file overrides
+overrides:
+  # Safety-critical files: light touch only
+  "RULES.md":
+    compression_level: light
+    preserve_safety_rules: true
+
+  # Files with code examples: compress prose, keep code
+  "cli-tools.md":
+    preserve_code_blocks: true
+    compression_level: light
+
+  # Prose-heavy files: compress aggressively
+  "writing-lab.md":
+    compression_level: heavy
+
+  "linkedin-drafter.md":
+    compression_level: heavy
+
+  # Reference files: maximum compression
+  "obsidian-integration.md":
+    compression_level: heavy
+    collapse_lists: true
