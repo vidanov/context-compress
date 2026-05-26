@@ -6,6 +6,8 @@ Works with: **Kiro CLI**, **Claude Code**, **Cursor**, **Windsurf**, **Gemini CL
 
 📖 **[Interactive demo & article](https://vidanov.github.io/context-compress/)** | 📝 **[Full article on DEV](https://dev.to/vidanov/i-ab-tested-compressed-agent-instructions-and-found-the-breaking-point-3h7k)**
 
+![The Compression Cliff](docs/compress.gif)
+
 ## The Problem
 
 AI coding agents load instruction files (CLAUDE.md, steering, skills) into context on every session. A typical power-user setup consumes 15-20K tokens before the first prompt. Most of that is formatting, redundancy, and prose the model doesn't need.
