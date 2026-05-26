@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Context Compress — The Compression Cliff</title>
+<meta name="description" content="I A/B tested compressed AI agent instructions and found the breaking point. Token-efficient compression for CLAUDE.md, steering files, and skills.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #fff; font-family: -apple-system, 'Helvetica Neue', sans-serif; color: #111; line-height: 1.6; }
+a { color: #378ADD; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Hero */
+.hero-wrap { position: relative; width: 100%; background: #fff; overflow: hidden; border-bottom: 1px solid rgba(0,0,0,0.08); }
+.hero-wrap canvas { display: block; width: 100%; height: auto; }
+
+/* Content */
+.container { max-width: 780px; margin: 0 auto; padding: 48px 24px 64px; }
+h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 12px; }
+h2 { font-size: 22px; font-weight: 700; margin-top: 40px; margin-bottom: 12px; }
+h3 { font-size: 17px; font-weight: 600; margin-top: 28px; margin-bottom: 8px; }
+p { margin-bottom: 16px; color: #333; }
+.subtitle { font-size: 16px; color: rgba(0,0,0,0.55); margin-bottom: 32px; }
+.cta { display: inline-block; background: #111; color: #fff; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; margin-top: 8px; margin-right: 12px; }
+.cta:hover { background: #333; text-decoration: none; }
+.cta-secondary { display: inline-block; border: 1.5px solid #111; color: #111; padding: 11px 24px; border-radius: 6px; font-weight: 600; font-size: 15px; margin-top: 8px; }
+.cta-secondary:hover { background: #f5f5f5; text-decoration: none; }
+code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 14px; }
+pre { background: #f8f8f8; border: 1px solid #eee; border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 16px 0; font-size: 14px; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; }
+th { font-weight: 600; background: #fafafa; }
+.badge { display: inline-block; background: #e8f4fd; color: #185FA5; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+
+/* Interactive widget */
+.widget-card { width: 100%; background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden; margin: 32px 0; }
+.widget-header { padding: 20px 28px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
+.widget-header h3 { font-size: 18px; margin: 0 0 4px; }
+.widget-header p { font-size: 13px; color: rgba(0,0,0,0.5); margin: 0; }
+.widget-canvas { display: block; width: 100%; height: auto; cursor: ew-resize; }
+.controls { display: flex; align-items: center; gap: 16px; padding: 12px 28px; border-top: 0.5px solid rgba(0,0,0,0.07); background: #fafafa; }
+.controls label { font-size: 12px; color: rgba(0,0,0,0.45); font-family: 'Courier New', monospace; white-space: nowrap; }
+.controls input[type=range] { flex: 1; accent-color: #378ADD; }
+.stat { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; min-width: 52px; text-align: right; }
+.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; padding: 20px 28px; border-top: 0.5px solid rgba(0,0,0,0.07); }
+.legend-item { display: flex; gap: 10px; align-items: flex-start; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; margin-top: 4px; }
+.legend-item h4 { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.legend-item p { font-size: 11px; color: rgba(0,0,0,0.5); line-height: 1.4; margin: 0; }
+.widget-footer { padding: 14px 28px; border-top: 0.5px solid rgba(0,0,0,0.07); background: #fafafa; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.widget-footer span { font-size: 11px; color: rgba(0,0,0,0.4); font-family: 'Courier New', monospace; }
+
+footer { text-align: center; padding: 32px 24px; border-top: 1px solid #eee; font-size: 13px; color: rgba(0,0,0,0.4); }
+</style>
+</head>
+<body>
+
+<!-- Hero Animation -->
+<div class="hero-wrap">
+  <canvas id="hero"></canvas>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+  <span class="badge">AI</span><span class="badge">FinOps</span><span class="badge">Productivity</span>
+  <h1 style="margin-top:16px">I A/B tested compressed agent instructions and found the breaking point</h1>
+  <p class="subtitle">Your AI coding agent burns 15,000–20,000 tokens on instruction files before you type a word. I found exactly where compression breaks behavior — and built a tool to automate the safe zone.</p>
+
+  <a href="https://dev.to/vidanov/i-ab-tested-compressed-agent-instructions-and-found-the-breaking-point-3h7k" class="cta" target="_blank">Read the full article on DEV ↗</a>
+  <a href="https://github.com/vidanov/context-compress" class="cta-secondary" target="_blank">GitHub repo</a>
+
+  <h2>The Compression Cliff</h2>
+  <p>There's a threshold where compression stops being lossless. Beyond ~47–54% total reduction, the model's compliance with safety rules becomes probabilistic instead of deterministic.</p>
+
+  <table>
+    <tr><th>Content Type</th><th>Safe Reduction</th><th>Strategy</th></tr>
+    <tr><td>Paths, references, lists</td><td>60–70%</td><td>Maximum compression</td></tr>
+    <tr><td>Personality, style rules</td><td>50–60%</td><td>Heavy compression</td></tr>
+    <tr><td>Safety rules, preferences</td><td>20–30%</td><td>Formatting only</td></tr>
+    <tr><td>Code examples</td><td>0%</td><td>No compression</td></tr>
+  </table>
+
+  <h2>Interactive Demo</h2>
+  <p>Drag the compression line to see how token streams degrade past the cliff:</p>
+</div>
+
+<!-- Interactive Widget -->
+<div class="container" style="padding-top:0">
+<div class="widget-card">
+  <div class="widget-header">
+    <h3>The Compression Cliff — Interactive</h3>
+    <p>Drag the line or use the slider to explore compression levels</p>
+  </div>
+  <canvas class="widget-canvas" id="c"></canvas>
+  <div class="controls">
+    <label>compression level</label>
+    <input type="range" id="slider" min="5" max="95" value="45" step="1">
+    <span class="stat" id="stat">45%</span>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div><div><h4 style="color:#185FA5">Uncompressed input</h4><p>CLAUDE.md, steering files, skills — loaded at session start</p></div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3B6D11"></div><div><h4 style="color:#3B6D11">Safe zone (&lt;47%)</h4><p>Personality, paths, tool lists compress 60–70% with zero loss</p></div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#BA7517"></div><div><h4 style="color:#854F0B">Transition (47–54%)</h4><p>Compliance becomes probabilistic</p></div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:#E24B4A"></div><div><h4 style="color:#A32D2D">Past the cliff (&gt;54%)</h4><p>Safety rules ignored — behavior breaks</p></div></div>
+  </div>
+  <div class="widget-footer">
+    <span>Safe: personality · paths · tools · lists</span>
+    <span>Never compress: safety rules · IAM · audit content</span>
+  </div>
+</div>
+</div>
+
+<!-- Quick Start -->
+<div class="container" style="padding-top:0">
+  <h2>Quick Start</h2>
+  <pre><code>pip install context-compress
+
+# LLM compression (best results, needs kiro-cli)
+context-compress llm ~/.kiro/steering/ -o ~/.kiro/steering-compressed/
+
+# Regex compression (fast, offline)
+context-compress compress-dir ~/.kiro/steering/ -o ~/.kiro/steering-compressed/
+
+# Find duplicates across your context stack
+context-compress dedup ~/.kiro/steering/
+
+# Token usage stats
+context-compress stats ~/.kiro/steering/</code></pre>
+
+  <h2>Key Findings</h2>
+  <h3>LLM compression beats regex 9×</h3>
+  <p>Regex compression on lean steering files: <strong>2.7%</strong>. LLM semantic compression on the same files: <strong>24%</strong>. The LLM understands which words carry meaning and which are scaffolding.</p>
+
+  <h3>Redundancy in safety rules is reinforcement</h3>
+  <p>Merging 8 safety bullets into 3 sentences (same meaning, 54% reduction) made compliance probabilistic. The verbose version asked permission every time; the merged version asked 1 out of 3 times.</p>
+
+  <h3>Four levers, not one</h3>
+  <table>
+    <tr><th>Layer</th><th>Strategy</th><th>Target</th></tr>
+    <tr><td>1</td><td>Skills over steering</td><td>Load prose on demand</td></tr>
+    <tr><td>2</td><td>Cache-aware ordering</td><td>Stable content above dynamic</td></tr>
+    <tr><td>3</td><td>LLM compression</td><td>Semantic compression of remaining prose</td></tr>
+    <tr><td>4</td><td>TOON encoding</td><td>Token-efficient structured payloads</td></tr>
+  </table>
+
+  <p style="margin-top:32px">
+    <a href="https://dev.to/vidanov/i-ab-tested-compressed-agent-instructions-and-found-the-breaking-point-3h7k" class="cta" target="_blank">Read the full article ↗</a>
+    <a href="https://github.com/vidanov/context-compress" class="cta-secondary" target="_blank">View on GitHub</a>
+  </p>
+</div>
+
+<footer>
+  <p>Built with <a href="https://github.com/vidanov/context-compress">context-compress</a> · <a href="https://dev.to/vidanov">Alexey Vidanov</a></p>
+</footer>
+
+<!-- Hero Animation Script -->
+<script>
+(function(){
+const canvas = document.getElementById('hero');
+const ctx = canvas.getContext('2d');
+const W = 1200, H = 480;
+canvas.width = W; canvas.height = H;
+const CLIFF = 0.72, SAFE_ZONE = 0.62;
+function lerp(a,b,t){return a+(b-a)*t}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function easeInOut(t){return t<0.5?2*t*t:-1+(4-2*t)*t}
+function getChannelFactor(p){
+  if(p<0.15)return 1.0;
+  if(p<CLIFF){const t=(p-0.15)/(CLIFF-0.15);return lerp(1.0,0.18,easeInOut(t))}
+  const t=clamp((p-CLIFF)/0.12,0,1);return lerp(0.18,1.2,t*t);
+}
+class Particle{
+  constructor(){this.reset();this.progress=Math.random()}
+  reset(){
+    this.progress=0;this.speed=0.0012+Math.random()*0.0008;
+    this.row=Math.floor(Math.random()*9)-4;
+    this.w=22+Math.random()*14;this.h=7+Math.random()*5;
+    this.broken=false;this.breakProgress=0;this.angle=0;this.dy=0;
+    this.opacity=0.75+Math.random()*0.25;
+  }
+  update(){
+    this.progress+=this.speed;if(this.progress>1.15)this.reset();
+    const p=this.progress,cf=getChannelFactor(p),spread=cf*(H*0.38),yNorm=(this.row+0.5)/9;
+    if(p>CLIFF&&!this.broken){this.broken=true;this.breakAngle=(Math.random()-0.5)*0.08;this.breakDy=(Math.random()-0.5)*3}
+    if(this.broken){this.breakProgress+=0.012;this.angle+=this.breakAngle;this.dy+=this.breakDy*0.05;this.opacity*=0.984}
+    this.x=p*W*1.1-W*0.05;this.y=H/2+(yNorm-0.5)*2*spread+(this.broken?this.dy*this.breakProgress*12:0);
+  }
+  draw(){
+    if(this.progress<0||this.progress>1.1)return;
+    const p=this.progress;
+    const alpha=this.opacity*clamp(p*6,0,1)*clamp((1.05-p)*8,0,1);
+    if(this.broken&&this.opacity<0.05)return;
+    ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.angle);
+    let r,g,b;
+    if(p<SAFE_ZONE){const t=p/SAFE_ZONE;r=lerp(180,226,t);g=lerp(30,75,t);b=lerp(30,74,t)}
+    else if(p<CLIFF){const t=(p-SAFE_ZONE)/(CLIFF-SAFE_ZONE);r=lerp(226,180,t);g=lerp(75,140,t);b=lerp(74,20,t)}
+    else{const t=clamp((p-CLIFF)/0.1,0,1);r=lerp(180,59,t);g=lerp(140,153,t);b=lerp(20,34,t)}
+    ctx.fillStyle=`rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${alpha})`;
+    ctx.strokeStyle=`rgba(${Math.min(255,Math.round(r)+30)},${Math.min(255,Math.round(g)+30)},${Math.min(255,Math.round(b)+30)},${alpha*0.4})`;
+    ctx.lineWidth=0.5;
+    const w=this.broken?this.w*(1+this.breakProgress*0.2):this.w;
+    const h=this.broken?this.h*(0.8-this.breakProgress*0.1):this.h;
+    ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,2);ctx.fill();ctx.stroke();ctx.restore();
+  }
+}
+const particles=Array.from({length:180},()=>new Particle());
+function draw(){
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,0,0,0.05)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  const cliffX=CLIFF*W,safeX=SAFE_ZONE*W;
+  // Zone fills
+  const lf=ctx.createLinearGradient(0,0,safeX,0);lf.addColorStop(0,'rgba(226,75,74,0.04)');lf.addColorStop(1,'rgba(226,75,74,0.08)');ctx.fillStyle=lf;ctx.fillRect(0,0,safeX,H);
+  const mf=ctx.createLinearGradient(safeX,0,cliffX,0);mf.addColorStop(0,'rgba(180,140,20,0.04)');mf.addColorStop(1,'rgba(180,140,20,0.09)');ctx.fillStyle=mf;ctx.fillRect(safeX,0,cliffX-safeX,H);
+  const rf=ctx.createLinearGradient(cliffX,0,W,0);rf.addColorStop(0,'rgba(59,109,17,0.07)');rf.addColorStop(1,'rgba(59,109,17,0.03)');ctx.fillStyle=rf;ctx.fillRect(cliffX,0,W-cliffX,H);
+  // Cliff line
+  ctx.save();ctx.setLineDash([4,6]);ctx.strokeStyle='rgba(180,100,30,0.4)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(safeX,0);ctx.lineTo(safeX,H);ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle='rgba(30,30,30,0.55)';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(cliffX,0);ctx.lineTo(cliffX,H);ctx.stroke();
+  ctx.strokeStyle='rgba(20,20,20,0.85)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cliffX,0);ctx.lineTo(cliffX,H);ctx.stroke();ctx.restore();
+  particles.forEach(p=>{p.update();p.draw()});
+  // Labels
+  ctx.save();ctx.font='600 11px "Courier New",monospace';ctx.textAlign='center';
+  ctx.fillStyle='rgba(180,30,30,0.75)';ctx.fillText('INCOMING TOKENS',safeX*0.5,28);
+  ctx.font='400 10px "Courier New",monospace';ctx.fillStyle='rgba(180,30,30,0.45)';ctx.fillText('uncompressed context',safeX*0.5,44);
+  ctx.font='600 11px "Courier New",monospace';ctx.fillStyle='rgba(160,110,20,0.75)';ctx.fillText('COMPRESSION ZONE',(safeX+cliffX)*0.5,28);
+  ctx.font='400 10px "Courier New",monospace';ctx.fillStyle='rgba(160,110,20,0.5)';ctx.fillText('safe up to ~47%',(safeX+cliffX)*0.5,44);
+  ctx.font='600 11px "Courier New",monospace';ctx.fillStyle='rgba(40,120,40,0.75)';ctx.fillText('COMPRESSED OUTPUT',(cliffX+W)*0.5,28);
+  ctx.font='400 10px "Courier New",monospace';ctx.fillStyle='rgba(40,120,40,0.45)';ctx.fillText('token-efficient instructions',(cliffX+W)*0.5,44);
+  ctx.restore();
+  // Headline
+  ctx.save();ctx.font='700 42px -apple-system,"Helvetica Neue",sans-serif';ctx.fillStyle='rgba(15,15,15,0.9)';ctx.textAlign='left';
+  ctx.fillText('I found the',52,H/2-16);ctx.fillStyle='rgba(160,30,30,0.9)';ctx.fillText('compression cliff',52,H/2+38);
+  ctx.font='400 15px -apple-system,"Helvetica Neue",sans-serif';ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillText('A/B testing AI agent instruction compression',54,H/2+72);
+  ctx.restore();
+  // Cliff label
+  ctx.save();ctx.fillStyle='rgba(20,20,20,0.8)';ctx.font='700 13px "Courier New",monospace';ctx.textAlign='center';
+  ctx.fillText('THE COMPRESSION CLIFF',cliffX,H-52);ctx.font='400 11px "Courier New",monospace';ctx.fillStyle='rgba(40,40,40,0.5)';
+  ctx.fillText('behavioral degradation threshold ≈ 47–54%',cliffX,H-34);ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+})();
+</script>
+
+<!-- Interactive Widget Script -->
+<script>
+(function(){
+const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');
+const slider=document.getElementById('slider');const statEl=document.getElementById('stat');
+const W=1100,H=460;canvas.width=W;canvas.height=H;
+const CLIFF_THRESHOLD=0.62,LINE_MIN=0.12,LINE_MAX=0.88;
+let compressionT=0.45,dragging=false,autoAnimate=true,autoTime=1.1,resumeTimer=null;
+function lerp(a,b,t){return a+(b-a)*t}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function easeInOut(t){return t<0.5?2*t*t:-1+(4-2*t)*t}
+function getLineX(){return(LINE_MIN+compressionT*(LINE_MAX-LINE_MIN))*W}
+function getOutputHealth(){return clamp(1-(compressionT-CLIFF_THRESHOLD)/(1-CLIFF_THRESHOLD)*2.2,0,1)}
+function getChannelSpread(xNorm){
+  const lineN=LINE_MIN+compressionT*(LINE_MAX-LINE_MIN);
+  if(xNorm<=lineN)return 0.36;const t=(xNorm-lineN)/(1-lineN);const health=getOutputHealth();
+  const minSpread=lerp(0.06,0.36,1-compressionT);
+  return health>0?lerp(minSpread,0.36,easeInOut(t)*0.7+0.3*t):lerp(minSpread,0.52,t*t);
+}
+class Particle{
+  constructor(){this.reset();this.progress=Math.random()}
+  reset(){this.progress=0;this.speed=0.001+Math.random()*0.0009;this.lane=(Math.random()-0.5)*2;
+    this.w=20+Math.random()*14;this.h=6+Math.random()*5;this.passed=false;this.broken=false;
+    this.bAngle=0;this.bDy=0;this.bProgress=0;this.opacity=0.72+Math.random()*0.28}
+  update(){
+    this.progress+=this.speed;if(this.progress>1.12)this.reset();
+    const lineN=LINE_MIN+compressionT*(LINE_MAX-LINE_MIN),health=getOutputHealth();
+    if(this.progress>lineN&&!this.passed){this.passed=true;
+      if(health<0.3&&Math.random()>health*2){this.broken=true;this.bAngle=(Math.random()-0.5)*0.1;this.bDy=(Math.random()-0.5)*4}}
+    if(this.broken){this.bProgress+=0.01;this.bAngle+=(Math.random()-0.5)*0.003;this.opacity*=0.987}
+    const spread=getChannelSpread(this.progress)*H;
+    this.x=this.progress*W;this.y=H/2+this.lane*spread+(this.broken?this.bDy*this.bProgress*14:0);
+  }
+  draw(){
+    if(this.progress<0||this.progress>1.08)return;if(this.broken&&this.opacity<0.04)return;
+    const alpha=this.opacity*clamp(this.progress*8,0,1)*clamp((1.05-this.progress)*8,0,1);
+    const health=getOutputHealth();let r,g,b;
+    if(!this.passed){const t=clamp(this.progress/(LINE_MIN+compressionT*(LINE_MAX-LINE_MIN)),0,1);
+      r=Math.round(lerp(55,85,t));g=Math.round(lerp(138,183,t));b=Math.round(lerp(221,235,t))}
+    else{r=Math.round(lerp(226,59,health));g=Math.round(lerp(75,153,health));b=Math.round(lerp(74,59,health))}
+    ctx.save();ctx.translate(this.x,this.y);if(this.broken)ctx.rotate(this.bAngle*this.bProgress*8);
+    ctx.fillStyle=`rgba(${r},${g},${b},${alpha})`;
+    ctx.strokeStyle=`rgba(${Math.min(255,r+30)},${Math.min(255,g+30)},${Math.min(255,b+30)},${alpha*0.4})`;
+    ctx.lineWidth=0.5;const w=this.w*(this.passed?clamp(1-compressionT*0.6,0.35,1):1);
+    ctx.beginPath();ctx.roundRect(-w/2,-this.h/2,w,this.h,2);ctx.fill();ctx.stroke();ctx.restore();
+  }
+}
+const particles=Array.from({length:200},()=>new Particle());
+function draw(){
+  if(autoAnimate&&!dragging){autoTime+=0.004;compressionT=clamp(lerp(0.08,0.92,(Math.sin(autoTime)+1)/2),0.02,0.98);slider.value=Math.round(compressionT*100);updateStat()}
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,0,0,0.04)';ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  const lineX=getLineX(),cliffX=(LINE_MIN+CLIFF_THRESHOLD*(LINE_MAX-LINE_MIN))*W,health=getOutputHealth();
+  const outR=Math.round(lerp(226,59,health)),outG=Math.round(lerp(75,153,health)),outB=Math.round(lerp(74,59,health));
+  ctx.fillStyle='rgba(55,138,221,0.03)';ctx.fillRect(0,0,cliffX,H);
+  ctx.save();ctx.fillStyle='rgba(200,60,60,0.05)';ctx.fillRect(cliffX-12,0,24,H);
+  ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(200,60,60,0.4)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cliffX,0);ctx.lineTo(cliffX,H);ctx.stroke();ctx.restore();
+  // Zone fills
+  const lg=ctx.createLinearGradient(0,0,lineX,0);lg.addColorStop(0,'rgba(55,138,221,0.04)');lg.addColorStop(1,'rgba(55,138,221,0.09)');ctx.fillStyle=lg;ctx.fillRect(0,0,lineX,H);
+  const rg=ctx.createLinearGradient(lineX,0,W,0);rg.addColorStop(0,`rgba(${outR},${outG},${outB},0.09)`);rg.addColorStop(1,`rgba(${outR},${outG},${outB},0.03)`);ctx.fillStyle=rg;ctx.fillRect(lineX,0,W-lineX,H);
+  particles.forEach(p=>{p.update();p.draw()});
+  // Compression line
+  ctx.save();ctx.strokeStyle='rgba(20,20,20,0.1)';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(lineX,0);ctx.lineTo(lineX,H);ctx.stroke();
+  ctx.strokeStyle='rgba(20,20,20,0.82)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(lineX,0);ctx.lineTo(lineX,H);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.strokeStyle='rgba(20,20,20,0.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(lineX,H/2,14,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(20,20,20,0.5)';ctx.font='13px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⟺',lineX,H/2);ctx.restore();
+  // Labels
+  ctx.save();ctx.textAlign='center';
+  if(lineX>130){const cx=lineX*0.5;ctx.font='700 11px "Courier New",monospace';ctx.fillStyle='rgba(24,95,165,0.85)';ctx.fillText('UNCOMPRESSED INPUT',cx,26);
+    ctx.font='400 10px "Courier New",monospace';ctx.fillStyle='rgba(24,95,165,0.5)';ctx.fillText('CLAUDE.md · steering files · skills',cx,42);
+    ctx.fillText(`~${Math.round(18000*(1-compressionT*0.5)).toLocaleString()} tokens loaded per session`,cx,57)}
+  const outCx=(lineX+W)*0.5;const outLabel=health>0.55?'COMPRESSED OUTPUT':health>0.15?'OVER-COMPRESSED':'BROKEN';
+  const subLabel=health>0.55?`${Math.round(compressionT*100)}% smaller · behavior intact`:health>0.15?'safety rules degrading':'safety rules ignored';
+  ctx.font='700 11px "Courier New",monospace';ctx.fillStyle=`rgba(${outR},${outG},${outB},0.88)`;ctx.fillText(outLabel,outCx,26);
+  ctx.font='400 10px "Courier New",monospace';ctx.fillStyle=`rgba(${outR},${outG},${outB},0.55)`;ctx.fillText(subLabel,outCx,42);
+  ctx.font='600 10px "Courier New",monospace';ctx.fillStyle='rgba(180,40,40,0.65)';ctx.fillText('BEHAVIORAL',cliffX,H-44);ctx.fillText('THRESHOLD',cliffX,H-30);ctx.fillText('≈ 47–54%',cliffX,H-16);
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+function startDrag(mx){if(Math.abs(mx-getLineX())<36){dragging=true;autoAnimate=false;clearTimeout(resumeTimer)}}
+function moveDrag(mx){if(!dragging)return;compressionT=clamp((mx/W-LINE_MIN)/(LINE_MAX-LINE_MIN),0.02,0.98);slider.value=Math.round(compressionT*100);updateStat()}
+function endDrag(){if(!dragging)return;dragging=false;resumeTimer=setTimeout(()=>{autoAnimate=true},3000)}
+canvas.addEventListener('mousedown',e=>{const r=canvas.getBoundingClientRect();startDrag((e.clientX-r.left)*(W/r.width))});
+window.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();moveDrag((e.clientX-r.left)*(W/r.width))});
+window.addEventListener('mouseup',endDrag);
+canvas.addEventListener('touchstart',e=>{const r=canvas.getBoundingClientRect();startDrag((e.touches[0].clientX-r.left)*(W/r.width));e.preventDefault()},{passive:false});
+window.addEventListener('touchmove',e=>{const r=canvas.getBoundingClientRect();moveDrag((e.touches[0].clientX-r.left)*(W/r.width));e.preventDefault()},{passive:false});
+window.addEventListener('touchend',endDrag);
+slider.addEventListener('input',()=>{autoAnimate=false;clearTimeout(resumeTimer);compressionT=slider.value/100;updateStat();resumeTimer=setTimeout(()=>{autoAnimate=true},3000)});
+function updateStat(){const h=getOutputHealth();statEl.textContent=Math.round(compressionT*100)+'%';statEl.style.color=`rgb(${Math.round(lerp(180,40,h))},${Math.round(lerp(30,140,h))},${Math.round(lerp(30,40,h))})`}
+updateStat();draw();
+})();
+</script>
+
+</body>
+</html>
